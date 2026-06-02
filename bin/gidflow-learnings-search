@@ -1,0 +1,26 @@
+#!/bin/bash
+# Search project learnings. Usage: gidflow-learnings-search [--limit N] [keyword]
+_GIDFLOW_HOME="${GIDFLOW_HOME:-$HOME/.gidflow}"
+_WORK_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+_SLUG=$(basename "$_WORK_DIR" | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
+_LEARN_FILE="$_GIDFLOW_HOME/projects/$_SLUG/learnings.jsonl"
+_LIMIT=5
+_KEYWORD=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --limit) _LIMIT="$2"; shift 2 ;;
+    *) _KEYWORD="$1"; shift ;;
+  esac
+done
+
+if [ ! -f "$_LEARN_FILE" ]; then
+  echo "No learnings found for project: $_SLUG"
+  exit 0
+fi
+
+if [ -n "$_KEYWORD" ]; then
+  grep -i "$_KEYWORD" "$_LEARN_FILE" | tail -"$_LIMIT"
+else
+  tail -"$_LIMIT" "$_LEARN_FILE"
+fi

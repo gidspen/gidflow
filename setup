@@ -1,0 +1,40 @@
+#!/bin/bash
+# gidflow setup — installs skill symlinks into ~/.claude/skills/
+# Run once after cloning: cd ~/.claude/skills/gidflow && ./setup
+
+set -e
+
+GIDFLOW_DIR="$(cd "$(dirname "$0")" && pwd)"
+SKILLS_DIR="$HOME/.claude/skills"
+
+echo "Installing gidflow from: $GIDFLOW_DIR"
+mkdir -p "$SKILLS_DIR"
+
+# Helper: create a skill directory with a SKILL.md symlink
+link_skill() {
+  local name="$1"
+  local target="$2"
+  mkdir -p "$SKILLS_DIR/$name"
+  ln -snf "$target" "$SKILLS_DIR/$name/SKILL.md"
+  echo "  ✓ /$name"
+}
+
+# Root skill (entry point / router)
+# If the repo is already at ~/.claude/skills/gidflow/, SKILL.md is already in place — skip symlink.
+if [ "$(realpath "$GIDFLOW_DIR" 2>/dev/null)" != "$(realpath "$SKILLS_DIR/gidflow" 2>/dev/null)" ]; then
+  link_skill "gidflow" "$GIDFLOW_DIR/SKILL.md"
+else
+  echo "  ✓ /gidflow (repo already in skills dir)"
+fi
+
+# Sub-skills
+link_skill "micro-resort-market-research" "$GIDFLOW_DIR/micro-resort-market-research/SKILL.md"
+link_skill "find-deals" "$GIDFLOW_DIR/find-deals/SKILL.md"
+link_skill "gidflow-upgrade" "$GIDFLOW_DIR/gidflow-upgrade/SKILL.md"
+
+# Make bin scripts executable
+chmod +x "$GIDFLOW_DIR/bin/"* 2>/dev/null || true
+
+echo ""
+echo "gidflow $(cat "$GIDFLOW_DIR/VERSION" 2>/dev/null) installed."
+echo "Commands: /gidflow, /micro-resort-market-research, /find-deals, /gidflow-upgrade"

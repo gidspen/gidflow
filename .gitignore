@@ -1,0 +1,12 @@
+# Runtime artifacts — never commit these
+_*.txt
+_*.json
+*.log
+pending-writes.jsonl
+.cursor
+last-run-*.json
+persist_set.py
+scrapers/
+tests/
+_archive/
+_prior-run-archive/

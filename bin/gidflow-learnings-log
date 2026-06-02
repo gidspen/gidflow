@@ -1,0 +1,18 @@
+#!/bin/bash
+# Log a durable project learning.
+# Usage: gidflow-learnings-log '{"skill":"find-deals","key":"SHORT_KEY","insight":"DESCRIPTION"}'
+_GIDFLOW_HOME="${GIDFLOW_HOME:-$HOME/.gidflow}"
+_WORK_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+_SLUG=$(basename "$_WORK_DIR" | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
+_LEARN_DIR="$_GIDFLOW_HOME/projects/$_SLUG"
+mkdir -p "$_LEARN_DIR"
+_ENTRY="$1"
+if [ -z "$_ENTRY" ]; then
+  echo "Usage: gidflow-learnings-log '{\"skill\":\"NAME\",\"key\":\"KEY\",\"insight\":\"DESCRIPTION\"}'" >&2
+  exit 1
+fi
+_TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+# Add timestamp if not present
+echo "$_ENTRY" | grep -q '"ts"' && echo "$_ENTRY" >> "$_LEARN_DIR/learnings.jsonl" \
+  || echo "${_ENTRY%\}},\"ts\":\"$_TS\"}" >> "$_LEARN_DIR/learnings.jsonl"
+echo "Logged to $_LEARN_DIR/learnings.jsonl"
