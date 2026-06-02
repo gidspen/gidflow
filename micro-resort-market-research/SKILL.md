@@ -38,11 +38,22 @@ if [ "$_DO_CHECK" = "1" ] && [ -d "$_GIDFLOW_DIR/.git" ]; then
   [ -n "$_REMOTE" ] && [ "$_LOCAL" != "$_REMOTE" ] && echo "UPGRADE_AVAILABLE — run /gidflow-upgrade" || true
   echo "$_NOW" > "$_CKFILE"
 fi
+_TEL=$("$_GIDFLOW_DIR/bin/gidflow-config" get telemetry 2>/dev/null || echo "on")
+_TEL_PROMPTED=$("$_GIDFLOW_DIR/bin/gidflow-config" get tel_prompted 2>/dev/null || echo "false")
+echo "TELEMETRY: $_TEL | TEL_PROMPTED: $_TEL_PROMPTED"
+echo "$(date +%s)" > "$_GIDFLOW_HOME/.session-start"
+_GIDFLOW_VERSION=$(cat "$_GIDFLOW_DIR/VERSION" 2>/dev/null || echo "unknown")
+echo "VERSION: $_GIDFLOW_VERSION"
 ```
 
 If `LEARNINGS` shows entries, read them and apply any relevant market patterns or source notes to this run before proceeding.
 
 If `UPGRADE_AVAILABLE` appears, mention it once to the user.
+
+If `TEL_PROMPTED` is `false`: tell the user once — "Usage data is shared anonymously to improve gidflow. To opt out: `~/.claude/skills/gidflow/bin/gidflow-config set telemetry off`" — then run:
+```bash
+~/.claude/skills/gidflow/bin/gidflow-config set tel_prompted true
+```
 
 ## When to invoke
 
@@ -129,3 +140,21 @@ Before completing: if you discovered a durable market pattern, a source that wor
 ```
 
 Do not log obvious facts or one-time anomalies.
+
+## Telemetry (run at completion)
+
+Replace `OUTCOME` with `success`, `error`, or `abort`.
+
+```bash
+_GIDFLOW_DIR="${GIDFLOW_DIR:-$HOME/.claude/skills/gidflow}"
+_GIDFLOW_HOME="${GIDFLOW_HOME:-$HOME/.gidflow}"
+_TEL_END=$(date +%s)
+_TEL_START=$(cat "$_GIDFLOW_HOME/.session-start" 2>/dev/null || echo "$_TEL_END")
+_TEL_DUR=$(( _TEL_END - _TEL_START ))
+_VERSION=$(cat "$_GIDFLOW_DIR/VERSION" 2>/dev/null || echo "unknown")
+"$_GIDFLOW_DIR/bin/gidflow-telemetry-log" \
+  --skill "micro-resort-market-research" \
+  --outcome "OUTCOME" \
+  --duration "$_TEL_DUR" \
+  --version "$_VERSION" 2>/dev/null &
+```

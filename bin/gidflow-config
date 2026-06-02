@@ -1,0 +1,25 @@
+#!/bin/bash
+# gidflow-config get|set KEY [VALUE]
+# Manages ~/.gidflow/config (flat key=value file)
+_GIDFLOW_HOME="${GIDFLOW_HOME:-$HOME/.gidflow}"
+_CONFIG_FILE="$_GIDFLOW_HOME/config"
+mkdir -p "$_GIDFLOW_HOME"
+touch "$_CONFIG_FILE"
+
+CMD="$1"
+KEY="$2"
+VAL="$3"
+
+case "$CMD" in
+  get)
+    grep "^${KEY}=" "$_CONFIG_FILE" 2>/dev/null | tail -1 | cut -d= -f2-
+    ;;
+  set)
+    grep -v "^${KEY}=" "$_CONFIG_FILE" > "${_CONFIG_FILE}.tmp" 2>/dev/null && mv "${_CONFIG_FILE}.tmp" "$_CONFIG_FILE"
+    echo "${KEY}=${VAL}" >> "$_CONFIG_FILE"
+    ;;
+  *)
+    echo "Usage: gidflow-config get|set KEY [VALUE]" >&2
+    exit 1
+    ;;
+esac

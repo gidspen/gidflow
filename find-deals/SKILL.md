@@ -40,6 +40,12 @@ if [ "$_DO_CHECK" = "1" ] && [ -d "$_GIDFLOW_DIR/.git" ]; then
   [ -n "$_REMOTE" ] && [ "$_LOCAL" != "$_REMOTE" ] && echo "UPGRADE_AVAILABLE — run /gidflow-upgrade" || true
   echo "$_NOW" > "$_CKFILE"
 fi
+_TEL=$("$_GIDFLOW_DIR/bin/gidflow-config" get telemetry 2>/dev/null || echo "on")
+_TEL_PROMPTED=$("$_GIDFLOW_DIR/bin/gidflow-config" get tel_prompted 2>/dev/null || echo "false")
+echo "TELEMETRY: $_TEL | TEL_PROMPTED: $_TEL_PROMPTED"
+echo "$(date +%s)" > "$_GIDFLOW_HOME/.session-start"
+_GIDFLOW_VERSION=$(cat "$_GIDFLOW_DIR/VERSION" 2>/dev/null || echo "unknown")
+echo "VERSION: $_GIDFLOW_VERSION"
 # Check for cursor from a prior run
 _CURSOR_FILE="$HOME/.claude/skills/find-deals/.cursor"
 [ -f "$_CURSOR_FILE" ] && echo "PRIOR_RUN_CURSOR: $(cat "$_CURSOR_FILE")" || true
@@ -51,6 +57,11 @@ _PENDING="$HOME/.claude/skills/find-deals/pending-writes.jsonl"
 If `LEARNINGS` shows entries, read them. Apply any noted blocked sources (skip those sources immediately) and any useful search phrases to this run.
 
 If `UPGRADE_AVAILABLE` appears, mention it once to the user.
+
+If `TEL_PROMPTED` is `false`: tell the user once — "Usage data is shared anonymously to improve gidflow. To opt out: `~/.claude/skills/gidflow/bin/gidflow-config set telemetry off`" — then run:
+```bash
+~/.claude/skills/gidflow/bin/gidflow-config set tel_prompted true
+```
 
 If `PENDING_WRITES` appears: flush `pending-writes.jsonl` to Supabase before starting the loop. See `persistence.md`.
 
@@ -211,3 +222,21 @@ Before completing: if you discovered a durable fact (a source that was blocked o
 ```
 
 Examples of good logs: `{"skill":"find-deals","key":"innshopper_accessible","insight":"InnShopper returns full listing detail on first fetch — no pagination needed"}`. Do not log obvious facts or one-time anomalies.
+
+## Telemetry (run at completion)
+
+Replace `OUTCOME` with `success`, `error`, or `abort`.
+
+```bash
+_GIDFLOW_DIR="${GIDFLOW_DIR:-$HOME/.claude/skills/gidflow}"
+_GIDFLOW_HOME="${GIDFLOW_HOME:-$HOME/.gidflow}"
+_TEL_END=$(date +%s)
+_TEL_START=$(cat "$_GIDFLOW_HOME/.session-start" 2>/dev/null || echo "$_TEL_END")
+_TEL_DUR=$(( _TEL_END - _TEL_START ))
+_VERSION=$(cat "$_GIDFLOW_DIR/VERSION" 2>/dev/null || echo "unknown")
+"$_GIDFLOW_DIR/bin/gidflow-telemetry-log" \
+  --skill "find-deals" \
+  --outcome "OUTCOME" \
+  --duration "$_TEL_DUR" \
+  --version "$_VERSION" 2>/dev/null &
+```
