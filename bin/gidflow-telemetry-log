@@ -1,25 +1,19 @@
 #!/bin/bash
-# Post a skill event to the gidflow telemetry table.
+# Post a skill event to the gidflow telemetry endpoint.
 # Usage: gidflow-telemetry-log --skill NAME --outcome success|error|abort --duration 42 --version 1.0.0
 #
 # Telemetry is ON by default. Users opt out with:
 #   ~/.claude/skills/gidflow/bin/gidflow-config set telemetry off
 
-# ── Config ───────────────────────────────────────────────────────────────────
-# Replace GIDFLOW_ANON_KEY_PLACEHOLDER with your Supabase anon key after setup.
-# Anon key is safe to hardcode — INSERT-only RLS on skill_events, no reads.
 _GIDFLOW_HOME="${GIDFLOW_HOME:-$HOME/.gidflow}"
 _GIDFLOW_DIR="${GIDFLOW_DIR:-$HOME/.claude/skills/gidflow}"
-_SUPABASE_URL="${SUPABASE_DEALS_URL:-GIDFLOW_SUPABASE_URL_PLACEHOLDER}"
-_ANON_KEY="${SUPABASE_DEALS_ANON_KEY:-GIDFLOW_ANON_KEY_PLACEHOLDER}"
 
 # ── Check telemetry setting ───────────────────────────────────────────────────
 _TEL=$("$_GIDFLOW_DIR/bin/gidflow-config" get telemetry 2>/dev/null)
 [ "$_TEL" = "off" ] && exit 0
 
-# If creds are not configured, skip silently
-[ "$_SUPABASE_URL" = "GIDFLOW_SUPABASE_URL_PLACEHOLDER" ] && exit 0
-[ "$_ANON_KEY" = "GIDFLOW_ANON_KEY_PLACEHOLDER" ] && exit 0
+# ── Telemetry endpoint (Edge Function — no secret required) ──────────────────
+_ENDPOINT="https://gggmmjvwbbfvrtjjlqvr.supabase.co/functions/v1/gidflow-telemetry"
 
 # ── Parse args ────────────────────────────────────────────────────────────────
 SKILL="" OUTCOME="unknown" DURATION=0 VERSION="unknown"
@@ -33,7 +27,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# ── Device hash ───────────────────────────────────────────────────────────────
+# ── Device hash (anonymous stable identifier) ────────────────────────────────
 _DEVICE_FILE="$_GIDFLOW_HOME/.device-id"
 if [ ! -f "$_DEVICE_FILE" ]; then
   (uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid 2>/dev/null || date +%s%N) > "$_DEVICE_FILE"
@@ -41,7 +35,7 @@ fi
 _DEVICE_RAW=$(cat "$_DEVICE_FILE")
 _DEVICE_HASH=$(printf '%s' "$_DEVICE_RAW" | md5 2>/dev/null || printf '%s' "$_DEVICE_RAW" | md5sum 2>/dev/null | cut -c1-32)
 
-# ── User label (optional, set by user) ───────────────────────────────────────
+# ── Optional user label (set with: gidflow-config set user_id YOUR_NAME) ─────
 _USER_ID=$("$_GIDFLOW_DIR/bin/gidflow-config" get user_id 2>/dev/null || echo "")
 
 # ── POST ──────────────────────────────────────────────────────────────────────
@@ -50,9 +44,6 @@ _PAYLOAD=$(printf '{"skill":"%s","version":"%s","outcome":"%s","duration_s":%s,"
   "$SKILL" "$VERSION" "$OUTCOME" "$DURATION" "$_TS" "$_DEVICE_HASH" "$_USER_ID")
 
 curl -sS --max-time 5 -X POST \
-  "${_SUPABASE_URL}/rest/v1/skill_events" \
-  -H "apikey: ${_ANON_KEY}" \
-  -H "Authorization: Bearer ${_ANON_KEY}" \
+  "$_ENDPOINT" \
   -H "Content-Type: application/json" \
-  -H "Prefer: return=minimal" \
   -d "$_PAYLOAD" > /dev/null 2>&1 || true
