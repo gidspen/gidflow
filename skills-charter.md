@@ -40,4 +40,14 @@ Knowledge (data files — sources, thresholds, scoring rules) lands freely. Mach
 
 ---
 
+## Deal Graph
+
+Skills that produce a deal fact participate in the reactive graph. The model and
+the live dependency map are in `deal-graph.md`: one node per fact, one owner
+skill, derived status, DAG. **A skill is not done until its node is registered
+there** (owner, inputs, type). That registry — not this charter — is where
+dependencies are tracked as we build.
+
+---
+
 *To make this bite, reference it from `~/.claude/CLAUDE.md`.*
