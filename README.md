@@ -35,7 +35,3 @@ To log a discovery during a run so it's available next time:
 ```bash
 ~/.claude/skills/gidflow/bin/gidflow-learnings-log '{"skill":"find-deals","key":"KEY","insight":"WHAT YOU LEARNED"}'
 ```
-
-## Charter
-
-See `skills-charter.md` for the 6 rules that govern all skills in this repo.

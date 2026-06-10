@@ -16,10 +16,6 @@ Two skills for hospitality real estate investors:
 | `/find-deals` | Searches the open web for on-market listings, scores them against a buy box (HOT / STRONG / WATCH), and writes them to the ledger | When actively sourcing deals |
 | `/gidflow-upgrade` | Pulls latest from the remote repo and reports what changed | When UPGRADE_AVAILABLE appears in a preamble |
 
-## Charter
-
-See `skills-charter.md` in this repo for the 6 rules that govern all skills here.
-
 ## When to invoke which skill
 
 - "Is [location] a good market for a micro resort?" → `/micro-resort-market-research`
