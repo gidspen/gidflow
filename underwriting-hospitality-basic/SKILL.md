@@ -146,14 +146,14 @@ Run the script in the detected mode. Report the headline block to the user:
 
 ## Stage 3 — Verdict (against thresholds)
 
-Read the user's thresholds from config (`thresholds.md` explains the keys + recommended defaults; recommend **LP IRR > 15%**). If a user has none set, use the recommended defaults and say so.
+Read the user's thresholds from config (`thresholds.md` explains the keys + recommended defaults; primary **LP IRR ≥ 15%**, secondary **DSCR ≥ 1.25**). If a user has none set, use the recommended defaults and say so. Two conditions are **always-on flags**, not user settings: `equity_created < 0` (stabilized value below cost — always flag, caps the verdict at `conditional`) and yield-on-cost below market cap (advisory note).
 
-- **all thresholds met** → `pass`
-- **clear miss on a primary threshold** → `fail`
-- **mixed / just short / passes only under researched assumptions** → `conditional`
-- **required inputs missing / RevPAR unsourceable** → `inconclusive`
+- **primary met, DSCR met, no flag tripped** → `pass`
+- **primary missed clearly, no defensible lever** → `fail`
+- **primary just short / DSCR fails / passes only under researched assumptions / a flag tripped** → `conditional`
+- **required inputs missing (incl. key count) / RevPAR unsourceable** → `inconclusive`
 
-One-line reason naming the binding metric ("LP IRR 11.2% < 15% floor at ask").
+One-line reason naming the binding metric or flag ("LP IRR 11.2% < 15% floor at ask"; "equity created −€421k — value below cost").
 
 ---
 
@@ -165,7 +165,7 @@ Underwriting feeds terms-setting (the agent's job — see AGENT.md). Always emit
 2. **Full metrics** at the current inputs.
 3. **A lever table** toward the user's IRR threshold — run `--levers` over `purchase_price, ltv, adr, occupancy` (and `reno_costs` for value-add). This is the raw material for "here are the ways to get to 15%."
 
-The agent presents the levers with tradeoffs and lets Gideon choose; this skill only computes them.
+The agent presents the levers with tradeoffs and lets the user choose; this skill only computes them.
 
 ### Verdict contract (the agent persists this)
 
