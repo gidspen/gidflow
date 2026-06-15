@@ -100,15 +100,37 @@ Read the user's ask into one mode:
 
 **Tier 1 — human-required.** The purchase price (or, in `solve`/`ceiling` mode, the target metric + value and the lever). Pull the **listing price** from the deal if running inside the pipeline; confirm it with the user.
 
-**Tier 2 — default-able.** Closing %, acq fee %, financing %, LTV, interest rate, term, GP/LP split, expense ratio, capital reserve, stabilized cap, IRR exit assumptions. Take defaults from `assumptions.md`; **echo each assumption you used.** Any value the user gives overrides the default.
+**Tier 2 — default-able.** Closing %, acq fee %, financing %, LTV, interest rate, term, GP/LP split, expense ratio, capital reserve, stabilized cap, IRR exit assumptions (incl. **7-year hold**). Take defaults from `assumptions.md`. `reno_costs` is **derived**, not defaulted — set it from condition × key count + extras (the per-key table and extras rule are in `assumptions.md`); state the condition tier and list the extras. Any value the user gives overrides the default.
+
+**Key count is always required (Tier 1, not researched).** The user must know the number of units — never default it and never silently research it. If it's unknown, ask. For deals where the legal unit scope is unconfirmed (e.g. an AL/STR license that may or may not permit more units), that uncertainty is the headline of the verdict — run a key-count sensitivity (the metrics swing hard on it) and lean `inconclusive` until confirmed.
 
 **Tier 3 — researched-if-missing (the financials).**
 - If the deal has actual financials (`deal_financials` node / a P&L), use the real in-place NOI for `current_noi` and real operating numbers.
 - If not, build the stabilized pro forma bottom-up: `keys × ADR × occupancy`. Source **ADR, occupancy, and RevPAR** from the deal's `market_research` read first; if absent, WebSearch comps per `../micro-resort-market-research/sources.md` (STR/AirDNA/CoStar tier order). Cite each.
-- If only key count + a market RevPAR are available, use the quick fallback: `nofin_key_count` + `nofin_revpar` → `gross = keys × RevPAR × 365` → `assumed NOI = 40% × gross` (the `nofin_*` inputs). 40% margin is the documented default; override if the market says otherwise.
+- If you have the key count but only a blended market RevPAR (no separate ADR/occupancy), use the quick fallback: `nofin_revpar` → `gross = keys × RevPAR × 365` → `assumed NOI = 40% × gross`. Uses the real `keys`; 40% margin is the documented default, override if the market says otherwise.
 - If RevPAR/ADR cannot be sourced at all → verdict `inconclusive`.
 
-Write the resolved inputs to a JSON file and run the script.
+Write the resolved inputs to a JSON file.
+
+---
+
+## Stage 1.5 — Present assumptions, get feedback (before running)
+
+Never run the model on assumptions the user hasn't seen. **Show the full resolved input set as a table** — value + source for each (user-provided · listing · market read · default · derived) — and ask the user what to adjust. Make the defaults and researched figures obvious, since those are what they'll want to challenge.
+
+```
+Assumption            Value        Source
+purchase_price        €1,296,000   listing
+keys                  6            user (villa-only — AL scope unconfirmed)
+adr                   €175         market read (base STR/villa)
+occupancy             40%          market read
+reno_costs            €120k        derived: moderate €20k/key × 6 + €0 extras
+stabilized_cap        6.0%         market read (base)
+ltv / rate / term     80% / 8% / 25yr   default
+hold / exit / growth  7yr / 6.0% / 3%   default
+```
+
+Apply any corrections, then run. This gate is required for an interactive run; in the autonomous loop, record the assumption set in the report so it's auditable.
 
 ---
 

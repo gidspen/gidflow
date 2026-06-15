@@ -36,7 +36,8 @@ DEFAULTS = {
     "current_cap":          0.10,    # H27
     "current_noi":      213_000.0,   # H28
     # Stabilized operating assumptions
-    "keys":                24.0,     # O5
+    # NOTE: `keys` has NO default — the user must always know the key count. It is
+    # required at call time (underwrite() raises if it is missing).
     "days_available":     365.0,     # O6
     "occupancy":            0.60,    # O9
     "adr":                190.0,     # O10
@@ -45,12 +46,12 @@ DEFAULTS = {
     "expense_ratio":        0.60,    # N18  (total opex as % of total revenue)
     "cap_reserve_pct":      0.15,    # N24  (capital reserve as % of total revenue)
     "stabilized_cap":       0.08,    # N36  (market cap used to value stabilized NOI)
-    # "If no financials" quick block (only used when financials are unknown)
-    "nofin_key_count":     15.0,     # H32
+    # "If no financials" quick block (only used when financials are unknown).
+    # Uses the real `keys` count — there is no separate no-financials key count.
     "nofin_revpar":        97.26027397,  # H33  (=35500/365 in the sheet)
     "nofin_noi_margin":     0.40,    # H35 uses 0.4 of gross
     # IRR module (NOT in the sheet — additions, all overridable)
-    "hold_years":           5.0,
+    "hold_years":           7.0,
     "noi_growth":           0.03,
     "exit_cap":             None,    # None => use stabilized_cap
     "sale_cost_pct":        0.02,
@@ -94,6 +95,10 @@ def underwrite(user_inputs: dict | None = None) -> dict:
     if user_inputs:
         i.update(user_inputs)
 
+    if i.get("keys") is None:
+        raise ValueError("`keys` (the unit/key count) is required — the user must "
+                         "always know it. There is no default key count.")
+
     pp = i["purchase_price"]
     lp_split = 1 - i["gp_split"]
 
@@ -113,8 +118,8 @@ def underwrite(user_inputs: dict | None = None) -> dict:
     # --- Current valuation (C25:H29) ---
     current_value = i["current_noi"] / i["current_cap"]  # H29
 
-    # --- If-no-financials quick block (C31:H35) ---
-    nofin_gross = i["nofin_revpar"] * i["nofin_key_count"] * 365  # H34
+    # --- If-no-financials quick block (C31:H35) — uses the real key count ---
+    nofin_gross = i["nofin_revpar"] * i["keys"] * 365  # H34
     nofin_noi = nofin_gross * i["nofin_noi_margin"]               # H35
 
     # --- Stabilized operating assumptions (J/N/O) ---
@@ -335,7 +340,8 @@ _SHEET_EXPECTED = {
 
 
 def selftest() -> bool:
-    got = underwrite()
+    # keys=24 is the source sheet's stabilized key count (cell O5).
+    got = underwrite({"keys": 24})
     ok = True
     for k, exp in _SHEET_EXPECTED.items():
         diff = abs(got[k] - exp)

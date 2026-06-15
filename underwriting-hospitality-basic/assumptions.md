@@ -14,8 +14,21 @@ Defaults live in code (`DEFAULTS` in `hospitality_underwriting_model_basic.py`) 
 
 | Input | Default | Cell | Meaning |
 |---|---|---|---|
-| `reno_costs` | 180,000 | F7 | Renovation / value-add budget. |
+| `reno_costs` | derived (see below) | F7 | Renovation / value-add budget. Derived from condition × key count + extras, not a flat default. |
 | `closing_pct` | 0.02 | E8 | Closing costs as % of purchase price. |
+
+### Deriving `reno_costs` (condition × keys + extras)
+
+The agent sets `reno_costs` from the property's condition and key count, then adds line-item estimates for anything beyond the rooms:
+
+| Condition | Per-key budget |
+|---|---|
+| Perfect / turnkey | $0 |
+| Light renovation | $10,000 / key |
+| Moderate renovation | $20,000 / key |
+| Heavy renovation | $40,000 / key |
+
+`reno_costs = per_key × keys + extras`. **Extras** (pool build/refurb, septic, roof, well, amenity buildings, FF&E refresh) are estimated separately by the agent — research typical costs and add them as a line item. Always state the condition tier assumed and list the extras, so the user can correct it. If condition is unknown, ask or assume **moderate** and flag it.
 | `acq_fee_pct` | 0.03 | E9 | Acquisition fee as % of purchase price. |
 | `financing_pct` | 0.01 | E10 | Financing cost as % of purchase price. |
 | `ltv` | 0.80 | H20 | Loan-to-value. Loan = ltv × purchase price. |
@@ -35,22 +48,21 @@ Defaults live in code (`DEFAULTS` in `hospitality_underwriting_model_basic.py`) 
 
 | Input | Default | Cell | Meaning |
 |---|---|---|---|
-| `keys` | 24 | O5 | Number of rentable units. |
-| `days_available` | 365 | O6 | Days per year available. |
+| `keys` | **none — required** | O5 | Number of rentable units. **Never defaulted.** The user must know the key count; the model raises if it's missing. |
+| `days_available` | 365 | O6 | Days per year available. Defaulted. |
 | `occupancy` | 0.60 | O9 | Stabilized occupancy. Research from market read. |
 | `adr` | 190 | O10 | Stabilized average daily rate. Research from market read. |
 
 ### No-financials quick fallback (only when financials unknown)
 
-When there's no P&L and only a key count + market RevPAR are available:
+When there's no P&L, use the real `keys` count + a researched market RevPAR:
 
 | Input | Default | Cell | Meaning |
 |---|---|---|---|
-| `nofin_key_count` | 15 | H32 | Key count for the quick estimate. |
 | `nofin_revpar` | 97.26 | H33 | Market RevPAR (cite the source). |
 | `nofin_noi_margin` | 0.40 | H35 | Assumed NOI as % of gross. **40% is the documented default.** |
 
-`gross = nofin_revpar × nofin_key_count × 365`, `assumed NOI = nofin_noi_margin × gross`.
+`gross = nofin_revpar × keys × 365`, `assumed NOI = nofin_noi_margin × gross`. There is no separate no-financials key count — it always uses `keys`.
 
 ## IRR module (additions — not in the source sheet)
 
@@ -58,7 +70,7 @@ The sheet stops at single-year stabilized metrics. These inputs drive the levere
 
 | Input | Default | Meaning |
 |---|---|---|
-| `hold_years` | 5 | Hold period. |
+| `hold_years` | 7 | Hold period. |
 | `noi_growth` | 0.03 | Annual revenue/NOI growth. |
 | `exit_cap` | `null` → stabilized_cap | Terminal cap rate at sale. |
 | `sale_cost_pct` | 0.02 | Cost of sale as % of exit value. |
