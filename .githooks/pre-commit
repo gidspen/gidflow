@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Validates every gidflow skill SKILL.md declares a non-blank asset_classes field.
+# Universal skills use: asset_classes: all
+# Asset-class-specific skills list exact property_type tokens (comma-separated).
+# A blank or missing asset_classes is a developer error — the commit is rejected.
+
+set -e
+
+REPO="$(git rev-parse --show-toplevel)"
+FAIL=0
+
+for skill_md in "$REPO"/*/SKILL.md; do
+  [ -f "$skill_md" ] || continue
+  skill=$(basename "$(dirname "$skill_md")")
+
+  # Extract asset_classes from YAML frontmatter (between the first two --- lines only)
+  value=$(awk '
+    /^---/ { block++; next }
+    block == 1 && /^asset_classes:/ { sub(/^asset_classes:[[:space:]]*/, ""); print; exit }
+    block >= 2 { exit }
+  ' "$skill_md" | tr -d '[:space:]')
+
+  if [ -z "$value" ]; then
+    echo "gidflow pre-commit: ERROR — $skill/SKILL.md missing asset_classes (use 'all' for universal skills)"
+    FAIL=1
+  fi
+done
+
+if [ "$FAIL" -ne 0 ]; then
+  echo ""
+  echo "  Every gidflow skill must declare asset_classes in its SKILL.md frontmatter."
+  echo "  Fix the skills above, then re-commit."
+  exit 1
+fi

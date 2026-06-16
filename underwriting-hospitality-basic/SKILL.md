@@ -1,6 +1,7 @@
 ---
 name: underwriting-hospitality-basic
-description: Use when underwriting a hospitality deal (hotel, micro resort, glamping, boutique inn) — running the basic pro forma, asking "what price gets me X% IRR", finding the ceiling offer price, or producing the underwriting verdict. First of the underwriting family (advanced hospitality, STR, self-storage, multifamily come later). Triggers — "underwrite this", "run the model", "what do I need for 15% IRR", "pro forma", "what's this worth".
+asset_classes: micro_resort, boutique_hotel, bb_inn, glamping, gite_complex
+description: Use when underwriting an existing value-add hospitality asset (hotel, micro resort, glamping, boutique inn) — running the basic pro forma, asking "what price gets me X% IRR", finding the ceiling offer price, or producing the underwriting verdict. Not applicable to ground-up development. First of the underwriting family (advanced hospitality, STR, self-storage, multifamily come later). Triggers — "underwrite this", "run the model", "what do I need for 15% IRR", "pro forma", "what's this worth".
 allowed-tools:
   - Bash
   - Read

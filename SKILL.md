@@ -24,3 +24,11 @@ Skills for hospitality real estate investors:
 - "What micro resort deals have you found?" → `/find-deals` (check the ledger)
 - "Underwrite this deal" / "what price gets me 15% IRR?" / "what's it worth?" → `/underwriting-hospitality-basic`
 - "Update / upgrade gidflow" → `/gidflow-upgrade`
+
+## Skill contract (required for every gidflow skill)
+
+Every skill in this directory **must** declare `asset_classes:` in its `SKILL.md` frontmatter before shipping. Universal skills (not asset-class-specific) use `asset_classes: all`. Asset-class-specific skills list the exact `property_type` tokens from the buy box (e.g. `micro_resort, boutique_hotel`). A blank or missing `asset_classes` is a developer error caught by the pre-commit hook.
+
+Underwriting skills additionally require: `thresholds.md` (verdict criteria + onboarding questions for those asset classes), `assumptions.md` (all defaults), and a deterministic Python model.
+
+**Hook setup** (one-time, per clone): `git config core.hooksPath .githooks` — enforces `asset_classes` on every commit to gidflow.

@@ -1,5 +1,6 @@
 ---
 name: gidflow-upgrade
+asset_classes: all
 description: Pull the latest gidflow from the remote repo and report what changed. Use when UPGRADE_AVAILABLE appears in a preamble, or when the user asks to update or upgrade gidflow.
 allowed-tools:
   - Bash
