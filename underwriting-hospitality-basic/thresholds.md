@@ -33,9 +33,9 @@ These aren't preferences; they're conditions that always get surfaced.
 
 Always write a one-line reason naming the binding metric: `"LP IRR 11.2% < 15% floor at ask; clears at $2.9M (−17%)"`.
 
-## Onboarding (set a user's thresholds)
+## Threshold question spec (asked by the `onboard` mode, not this skill)
 
-When a user first underwrites hospitality, ask two questions — with the recommendation pre-filled and a one-line explainer of what the metric is and why it matters:
+This is the **declaration** of what to ask — the capture happens once, up front, in AGENT.md's `onboard` mode (and a future standalone onboarding skill), never inside an underwriting run. This skill only *reads* the stored values at verdict time. Two questions, recommendation pre-filled, each with a one-line explainer of what the metric is and why it matters:
 
 1. **"Minimum LP IRR you'll accept on a hospitality deal? (most investors here use 15%)"**
    *LP IRR is the annualized return to the equity over the hold, accounting for timing — it's the single number that says whether the deal is worth your capital vs. the next one.*

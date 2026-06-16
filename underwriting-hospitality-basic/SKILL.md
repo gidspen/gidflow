@@ -13,7 +13,7 @@ allowed-tools:
 
 # Underwriting — Hospitality (Basic)
 
-Owns the `underwriting` check node for hospitality deals. Gathers deal inputs, fills assumptions, researches missing financials, runs a deterministic Python model (an exact replica of Gideon's Quick Sheet), and produces a **verdict** + a **terms scaffold** the agent uses to negotiate.
+Owns the `underwriting` check node for hospitality deals. Gathers deal inputs, fills assumptions, researches missing financials, runs a deterministic Python model (an exact replica of the source Quick Sheet), and produces a **verdict** + a **terms scaffold** the agent uses to negotiate.
 
 The math is enforced in code, not reasoning. This file is the procedure around the script — it never re-derives a formula. `hospitality_underwriting_model_basic.py --selftest` proves the replica still matches the source sheet.
 
@@ -146,7 +146,7 @@ Run the script in the detected mode. Report the headline block to the user:
 
 ## Stage 3 — Verdict (against thresholds)
 
-Read the user's thresholds from config (`thresholds.md` explains the keys + recommended defaults; primary **LP IRR ≥ 15%**, secondary **DSCR ≥ 1.25**). If a user has none set, use the recommended defaults and say so. Two conditions are **always-on flags**, not user settings: `equity_created < 0` (stabilized value below cost — always flag, caps the verdict at `conditional`) and yield-on-cost below market cap (advisory note).
+Read the user's thresholds from config (`thresholds.md` explains the keys + recommended defaults; primary **LP IRR ≥ 15%**, secondary **DSCR ≥ 1.25**). If a user has none set, use the recommended defaults, say so, and point them to the `onboard` mode to set their own — do **not** run onboarding inline here. Two conditions are **always-on flags**, not user settings: `equity_created < 0` (stabilized value below cost — always flag, caps the verdict at `conditional`) and yield-on-cost below market cap (advisory note).
 
 - **primary met, DSCR met, no flag tripped** → `pass`
 - **primary missed clearly, no defensible lever** → `fail`
