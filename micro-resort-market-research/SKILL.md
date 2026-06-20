@@ -114,9 +114,42 @@ Verdict: GO / NO / CONDITIONAL — <one line>
 | 4 Supply       | ... | ... |
 | 5 Rate & Occ   | ... | ... |
 
+Positioning by asset class:
+| Asset class | Layer | ADR | Occ | RevPAR | Supply | Call |
+|---|---|---|---|---|---|---|
+| <commodity cabin> | STR      | $... | ..% | $... | saturated | AVOID |
+| <luxury dome>     | glamping | $... | ..% | $... | thin      | BUILD |
+
+Best positioning: <one line — what to build, target ADR/occ, what to avoid>
 Aggregation note: <which layer drove rate/occ; blended expectation by unit type>
 Confidence: <high / med / low, and why>
 Still need: <CoStar hotel submarket numbers; premium-tier occupancy; etc.>
+```
+
+## Persist the read (every completed run)
+
+Upsert to the `markets` table (deals DB), keyed on `slug`, so re-runs refresh in place and a read under 90 days old is reused instead of re-run. Set `SLUG` to the STR-submarket / destination name, not the tiny town (e.g. Mineral Bluff → `blue-ridge-fannin-county-ga`). First write the four markdown slices to temp files, then upsert. Fail-soft if creds are missing (never crash the read).
+
+- `/tmp/mr_summary.md` — verdict + synthesis + confidence + still-need (the brief)
+- `/tmp/mr_gates.md` — the 6-gate table
+- `/tmp/mr_positioning.md` — the asset-class table + best-positioning line
+- `/tmp/mr_report.md` — the full read
+
+```bash
+SLUG="..."; LOC="..."; GEO="..."; VERDICT="GO|NO|CONDITIONAL"; CONF="high|medium|low"  # set per run
+_ef=""; for f in ./.env "$HOME/dealhound-pro/.env"; do [ -f "$f" ] && { _ef="$f"; break; }; done
+_p(){ grep -E "^$1=" "$_ef" 2>/dev/null | head -1 | cut -d= -f2-; }
+URL="$(_p SUPABASE_URL)"; KEY="$(_p SUPABASE_SERVICE_KEY)"
+if [ -z "$URL" ] || [ -z "$KEY" ]; then echo "PERSIST SKIPPED — no Supabase creds in env; read not saved"; else
+  jq -n --arg slug "$SLUG" --arg location "$LOC" --arg geography "$GEO" --arg verdict "$VERDICT" \
+    --arg confidence "$CONF" --arg as_of "$(date +%F)" \
+    --rawfile summary_md /tmp/mr_summary.md --rawfile gates_md /tmp/mr_gates.md \
+    --rawfile positioning_md /tmp/mr_positioning.md --rawfile report_md /tmp/mr_report.md \
+    '{slug:$slug,location:$location,geography:$geography,verdict:$verdict,confidence:$confidence,as_of:$as_of,summary_md:$summary_md,gates_md:$gates_md,positioning_md:$positioning_md,report_md:$report_md,updated_at:(now|todate)}' > /tmp/mr_row.json
+  curl -sS -X POST "$URL/rest/v1/markets?on_conflict=slug" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" \
+    -H "Content-Type: application/json" -H "Prefer: resolution=merge-duplicates,return=minimal" \
+    --data @/tmp/mr_row.json && echo "PERSISTED: $SLUG"
+fi
 ```
 
 ## Principles
