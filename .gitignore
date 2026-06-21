@@ -1,4 +1,6 @@
 # Runtime artifacts — never commit these
+__pycache__/
+*.pyc
 _*.txt
 _*.json
 *.log

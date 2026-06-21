@@ -1,5 +1,6 @@
 ---
 name: micro-resort-market-research
+asset_classes: micro_resort, boutique_hotel, bb_inn, glamping, gite_complex
 description: Evaluate whether a market is strong enough to buy a micro resort, boutique resort, or glamping property, BEFORE underwriting any deal. Runs a 6-gate market funnel that aggregates micro resort, glamping, and STR data (plus CoStar hotel data the user provides), weighted micro-resort-primary. Use when asked to evaluate, analyze, or research a market or location for a micro resort / boutique hotel acquisition, "is this a good market", or when the user runs /micro-resort-market-research.
 allowed-tools:
   - Bash

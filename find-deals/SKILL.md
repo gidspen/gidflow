@@ -1,5 +1,6 @@
 ---
 name: find-deals
+asset_classes: all
 description: Use when searching for on-market real estate deals, running /find-deals, or when the user wants to find, source, or evaluate micro resort, glamping, boutique hotel, or STR investment properties. Phase 1 of the Deal Partner pipeline.
 allowed-tools:
   - Bash
